@@ -20,6 +20,10 @@ class MNISTPredictor {
         this.apiEndpoint = '/api';
         this.hasDrawn = false;
         
+        // Configuration for question preferences - read from URL params
+        this.preferredNumbers = this.parseSkewFromURL();
+        this.preferenceWeight = 5; // How much more likely preferred questions are (5x more likely)
+        
         console.log('Calling this.init()...');
         this.init();
         console.log('MNISTPredictor constructor completed.');
@@ -414,11 +418,51 @@ class MNISTPredictor {
             { question: "How many sides on a dice? 🎲", answer: 6 },
             { question: "What's half of 16? ➗", answer: 8 },
             { question: "How many musicians in a quartet? 🎼", answer: 4 },
-            { question: "How many players on a basketball team on court? 🏀", answer: 5 }
+            { question: "How many players on a basketball team on court? 🏀", answer: 5 },
+            
+            // Additional questions for 6 and 9 (to increase their representation)
+            { question: "How many strings on a standard guitar? 🎸", answer: 6 },
+            { question: "How many sides in a hexagon? ⬡", answer: 6 },
+            { question: "How many faces on a cube? 📦", answer: 6 },
+            { question: "How many legs does an insect have? 🐞", answer: 6 },
+            { question: "How many pack in half a dozen? 📦", answer: 6 },
+            { question: "What's 3 × 2? ✖️", answer: 6 },
+            
+            { question: "How many lives does a cat have? 🐱", answer: 9 },
+            { question: "What's 3 × 3? ✖️", answer: 9 },
+            { question: "How many planets in our solar system? 🪐", answer: 9 },
+            { question: "What's the highest single digit? 🔢", answer: 9 },
+            { question: "How many squares in a tic-tac-toe grid? ⭕", answer: 9 },
+            { question: "What comes after 8? ➡️", answer: 9 }
         ];
 
-        const challenge = challenges[Math.floor(Math.random() * challenges.length)];
+        // Select challenge with optional weighting
+        let challenge;
+        if (this.preferredNumbers.length > 0) {
+            // Create weighted array based on preferences
+            const weightedChallenges = [];
+            challenges.forEach(ch => {
+                const weight = this.preferredNumbers.includes(ch.answer) ? this.preferenceWeight : 1;
+                for (let i = 0; i < weight; i++) {
+                    weightedChallenges.push(ch);
+                }
+            });
+            
+            // Debug: show distribution
+            const distribution = {};
+            weightedChallenges.forEach(ch => {
+                distribution[ch.answer] = (distribution[ch.answer] || 0) + 1;
+            });
+            console.log('Weighted distribution:', distribution);
+            
+            challenge = weightedChallenges[Math.floor(Math.random() * weightedChallenges.length)];
+        } else {
+            // No preferences - equal probability
+            challenge = challenges[Math.floor(Math.random() * challenges.length)];
+        }
         this.currentChallenge = challenge.answer;
+        
+        console.log(`Selected challenge with answer ${challenge.answer} (preferred: ${this.preferredNumbers.includes(challenge.answer)})`);
 
         // Update the UI with the question in a big, clear way
         console.log('Setting challenge question:', challenge.question);
@@ -566,6 +610,28 @@ class MNISTPredictor {
                 this.showAlert('New brain teaser ready! 🧠✨', 'success');
             }
         }, 1000);
+    }
+
+    // Parse skew parameter from URL (e.g., ?skew=6,9)
+    parseSkewFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const skewParam = urlParams.get('skew');
+        
+        if (skewParam) {
+            const numbers = skewParam.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n >= 0 && n <= 9);
+            console.log(`Skew parameter found: ${skewParam} -> parsed numbers: [${numbers}]`);
+            return numbers;
+        }
+        
+        console.log('No skew parameter found, using no preferences');
+        return []; // No preferences by default
+    }
+
+    // Method to change preferred numbers
+    setPreferredNumbers(numbers, weight = 3) {
+        this.preferredNumbers = numbers;
+        this.preferenceWeight = weight;
+        console.log(`Updated preferred numbers to: ${numbers} with weight: ${weight}`);
     }
 }
 
