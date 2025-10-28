@@ -16,12 +16,12 @@
     <div class="container-fluid">
         <!-- Header -->
         <div class="row">
-            <div class="col-12 text-center py-4">
-                <h1 class="display-4 text-white mb-0">
+            <div class="col-12 text-center py-3">
+                <h2 class="h4 text-white mb-1">
                     <i class="fas fa-brain text-warning bounce"></i> 
                     MNIST Digit Predictor
-                </h1>
-                <p class="lead text-white-50">Draw digits and let AI guess what you drew!</p>
+                </h2>
+                <p class="small text-white-50 mb-0">Draw digits and let AI guess what you drew!</p>
             </div>
         </div>
 
@@ -51,25 +51,27 @@
             </div>
         </div>
 
-        <!-- Game Area -->
+        <!-- Game Area - Single Column Layout -->
         <div class="row justify-content-center">
-            <!-- Drawing Canvas -->
-            <div class="col-lg-6 col-md-8 mb-4">
-                <div class="card shadow-lg border-0">
-                    <div class="card-header bg-primary text-white text-center">
-                        <h5 class="mb-0">
-                            <i class="fas fa-palette"></i> Drawing Canvas
-                        </h5>
+            <div class="col-md-8 col-lg-6">
+                
+                <!-- Challenge Instructions -->
+                <div id="challengeInstructions" class="alert alert-success d-none mb-3" role="alert">
+                    <div class="text-center">
+                        <i class="fas fa-brain fa-2x mb-2"></i>
+                        <div id="challengeQuestion" class="fw-bold text-success mb-2" style="font-size: 2.5rem; line-height:1.1;">Question loading...</div>
+                        <div class="fs-5 text-dark mb-1">Draw your answer below!</div>
                     </div>
-                    <div class="card-body text-center p-4">
-                        <!-- Challenge Mode Instructions -->
-                        <div id="challengeInstructions" class="alert alert-success d-none mb-3" role="alert">
-                            <h6 class="alert-heading">
-                                <i class="fas fa-bullseye"></i> Your Challenge:
-                            </h6>
-                            <p class="mb-2">Draw the digit: <span id="targetDigit" class="badge bg-success fs-4">?</span></p>
-                        </div>
+                </div>
 
+                <!-- Drawing Canvas -->
+                <div class="card shadow-lg border-0 mb-3">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h6 class="mb-0">
+                            <i class="fas fa-palette"></i> Drawing Canvas
+                        </h6>
+                    </div>
+                    <div class="card-body text-center p-3">
                         <!-- Canvas Container -->
                         <div class="canvas-container position-relative mb-3">
                             <canvas id="drawingCanvas" width="280" height="280" class="border border-3 rounded shadow-sm" style="background-color: #000000;"></canvas>
@@ -82,7 +84,7 @@
                         </div>
 
                         <!-- Canvas Controls -->
-                        <div class="d-flex justify-content-center gap-2 mb-3">
+                        <div class="d-flex justify-content-center gap-2">
                             <button id="clearCanvas" class="btn btn-warning">
                                 <i class="fas fa-eraser"></i> Clear
                             </button>
@@ -90,45 +92,34 @@
                                 <i class="fas fa-magic"></i> Predict!
                             </button>
                         </div>
-
-                        <!-- Drawing Instructions -->
-                        <small class="text-muted">
-                            <i class="fas fa-info-circle"></i> 
-                            Draw a digit (0-9) in the canvas above. Make it <strong>big and clear</strong>!<br>
-                            <small class="text-info">
-                                💡 <strong>Tips:</strong> Draw thick, centered digits in <strong>white</strong> on the black canvas. The AI sees a 28×28 pixel version.
-                            </small>
-                        </small>
                     </div>
                 </div>
-            </div>
 
-            <!-- Results Panel -->
-            <div class="col-lg-6 col-md-8 mb-4">
-                <div class="card shadow-lg border-0">
+                <!-- AI Prediction Results -->
+                <div class="card shadow-lg border-0 mb-3">
                     <div class="card-header bg-success text-white text-center">
-                        <h5 class="mb-0">
+                        <h6 class="mb-0">
                             <i class="fas fa-robot"></i> AI Prediction
-                        </h5>
+                        </h6>
                     </div>
-                    <div class="card-body text-center p-4">
+                    <div class="card-body text-center p-3">
                         <!-- Prediction Display -->
                         <div id="predictionResult" class="d-none">
                             <div class="mb-3">
-                                <h2 class="text-primary mb-0">I think you drew:</h2>
-                                <div id="predictedDigit" class="display-1 text-success fw-bold">?</div>
+                                <h5 class="text-primary mb-2">I think you drew:</h5>
+                                <div id="predictedDigit" class="display-3 text-success fw-bold">?</div>
                             </div>
                             
                             <!-- Challenge Mode Result -->
                             <div id="challengeResult" class="d-none">
                                 <div id="successResult" class="alert alert-success d-none">
                                     <i class="fas fa-brain fa-2x mb-2 text-success"></i>
-                                    <h4>Brilliant! 🧠✨</h4>
+                                    <h5>Brilliant! 🧠✨</h5>
                                     <p class="mb-0">You got it right! Smart cookie! 🍪</p>
                                 </div>
                                 <div id="failResult" class="alert alert-danger d-none">
                                     <i class="fas fa-thinking fa-2x mb-2"></i>
-                                    <h4>Hmm, not quite! 🤔</h4>
+                                    <h5>Hmm, not quite! 🤔</h5>
                                     <p class="mb-0">Think again or try a new brain teaser!</p>
                                 </div>
                             </div>
@@ -144,25 +135,25 @@
 
                         <!-- Initial State -->
                         <div id="initialState">
-                            <i class="fas fa-lightbulb fa-3x text-warning mb-3"></i>
-                            <h4 class="text-muted">Ready to predict!</h4>
-                            <p class="text-muted">Draw something and click "Predict!" to see what the AI thinks.</p>
+                            <i class="fas fa-lightbulb fa-2x text-warning mb-2"></i>
+                            <h6 class="text-muted mb-1">Ready to predict!</h6>
+                            <p class="text-muted small mb-0">Draw a digit and click "Predict!"</p>
                         </div>
 
                         <!-- Challenge Mode Controls -->
                         <div id="challengeControls" class="d-none mt-3">
-                            <button id="newChallengeBtn" class="btn btn-success">
+                            <button id="newChallengeBtn" class="btn btn-success btn-sm">
                                 <i class="fas fa-lightbulb"></i> New Brain Teaser
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Score Panel for Challenge Mode -->
-                <div id="scorePanel" class="card shadow-lg border-0 mt-3 d-none">
-                    <div class="card-header bg-warning text-dark text-center">
+                <!-- Score Panel -->
+                <div id="scorePanel" class="card shadow-lg border-0 mb-3 d-none">
+                    <div class="card-header bg-success text-white text-center">
                         <h6 class="mb-0">
-                            <i class="fas fa-star"></i> Your Score
+                            <i class="fas fa-chart-pie"></i> Score
                         </h6>
                     </div>
                     <div class="card-body text-center py-2">
@@ -191,11 +182,12 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
 
-        <!-- Connection Status -->
-        <div class="row">
+        <!-- Connection Status - Hidden for compact layout -->
+        <div class="row d-none">
             <div class="col-12">
                 <div id="connectionStatus" class="alert alert-info text-center" role="alert">
                     <i class="fas fa-wifi"></i> 
@@ -218,6 +210,7 @@
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <!-- Custom JavaScript -->
-    <script src="assets/app.js"></script>
+        <!-- Custom JavaScript -->
+    <script src="assets/app.js?v=1.2"></script>
 </body>
 </html>

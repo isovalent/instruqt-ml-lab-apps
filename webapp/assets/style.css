@@ -1,3 +1,18 @@
+/* Extra large question for clarity */
+#challengeQuestion {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #198754;
+    margin-bottom: 0.5rem;
+    line-height: 1.15;
+    word-break: break-word;
+}
+
+@media (max-width: 768px) {
+    #challengeQuestion {
+        font-size: 1.5rem;
+    }
+}
 /* Custom CSS for MNIST Digit Predictor */
 
 /* Gradient Background */
@@ -164,21 +179,66 @@
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
-/* Responsive Design */
+/* Responsive Design - Optimized for iframe */
 @media (max-width: 768px) {
     .display-4 {
-        font-size: 2rem;
+        font-size: 1.8rem;
     }
     
     #drawingCanvas {
         width: 100%;
         height: auto;
-        max-width: 280px;
+        max-width: 250px;
     }
     
     #predictedDigit {
-        font-size: 4rem;
+        font-size: 3rem;
     }
+}
+
+/* Single Column Layout Optimizations */
+.card {
+    margin-bottom: 0.75rem !important;
+}
+
+.card-body {
+    padding: 1rem !important;
+}
+
+.card-header h6 {
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Compact canvas for iframe */
+#drawingCanvas {
+    max-width: 250px;
+    width: 100%;
+    height: auto;
+}
+
+/* Smaller text for iframe */
+.display-3 {
+    font-size: 2.5rem;
+}
+
+/* Compact padding */
+.py-4 {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+}
+
+/* Auto-progress indication */
+.auto-progress-countdown {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(40, 167, 69, 0.9);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    animation: pulse 1s infinite;
 }
 
 /* Connection Status */

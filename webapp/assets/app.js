@@ -3,8 +3,11 @@
  * Interactive web app for drawing digits and getting AI predictions
  */
 
+console.log('app.js file loaded successfully!');
+
 class MNISTPredictor {
     constructor() {
+        console.log('MNISTPredictor constructor starting...');
         this.canvas = null;
         this.ctx = null;
         this.isDrawing = false;
@@ -17,15 +20,24 @@ class MNISTPredictor {
         this.apiEndpoint = '/api';
         this.hasDrawn = false;
         
+        console.log('Calling this.init()...');
         this.init();
+        console.log('MNISTPredictor constructor completed.');
     }
 
     init() {
+        console.log('init() starting...');
         this.setupCanvas();
+        console.log('setupCanvas() completed');
         this.setupEventListeners();
+        console.log('setupEventListeners() completed');
         this.setupSounds();
+        console.log('setupSounds() completed');
         this.checkConnection();
+        console.log('checkConnection() completed');
         this.updateGameMode();
+        console.log('updateGameMode() completed');
+        console.log('init() completed');
     }
 
     setupCanvas() {
@@ -288,7 +300,7 @@ class MNISTPredictor {
             ];
             
             const success = successMessages[Math.floor(Math.random() * successMessages.length)];
-            $('#successResult h4').text(success.title);
+            $('#successResult h5').text(success.title);
             $('#successResult p').text(success.text);
             $('#successResult').removeClass('d-none');
             $('#failResult').addClass('d-none');
@@ -296,6 +308,10 @@ class MNISTPredictor {
             this.playSound('successSound');
             this.createConfetti();
             this.addEmojiReaction(['🎉', '🎊', '🌟', '✨', '🏆', '👏'][Math.floor(Math.random() * 6)]);
+            
+            // Auto-progress to next question after celebration
+            this.startAutoProgressCountdown(3); // 3 second countdown
+            
         } else {
             this.score.incorrect++;
             
@@ -310,7 +326,7 @@ class MNISTPredictor {
             ];
             
             const fail = failMessages[Math.floor(Math.random() * failMessages.length)];
-            $('#failResult h4').text(fail.title);
+            $('#failResult h5').text(fail.title);
             $('#failResult p').text(fail.text);
             $('#successResult').addClass('d-none');
             $('#failResult').removeClass('d-none');
@@ -400,21 +416,29 @@ class MNISTPredictor {
             { question: "How many musicians in a quartet? 🎼", answer: 4 },
             { question: "How many players on a basketball team on court? 🏀", answer: 5 }
         ];
-        
+
         const challenge = challenges[Math.floor(Math.random() * challenges.length)];
         this.currentChallenge = challenge.answer;
-        const displayAnswer = challenge.displayAnswer !== undefined ? challenge.displayAnswer : challenge.answer;
+
+        // Update the UI with the question in a big, clear way
+        console.log('Setting challenge question:', challenge.question);
+        const questionElement = document.getElementById('challengeQuestion');
+        if (questionElement) {
+            questionElement.textContent = challenge.question;
+            console.log('Question element found and updated!');
+        } else {
+            console.error('Question element not found!');
+        }
         
-        // Update the UI with the question
-        $('#challengeInstructions .alert-heading').html('<i class="fas fa-brain"></i> Brain Teaser:');
-        $('#challengeInstructions p').html(`${challenge.question}<br><strong>Draw your answer:</strong>`);
-        $('#targetDigit').text(displayAnswer).addClass('pulse');
+        // Also try jQuery selector as backup
+        $('#challengeQuestion').text(challenge.question);
         
-        // Remove pulse animation after it completes
-        setTimeout(() => {
-            $('#targetDigit').removeClass('pulse');
-        }, 2000);
-        
+        // Ensure the challenge instructions are visible and UI is in challenge mode
+        $('#challengeInstructions').removeClass('d-none');
+        $('#challengeResult').addClass('d-none'); // Hide previous result
+        $('#predictionResult').addClass('d-none'); // Hide prediction area
+        $('#initialState').removeClass('d-none'); // Show ready state
+
         this.clearCanvas();
     }
 
@@ -446,18 +470,13 @@ class MNISTPredictor {
     }
 
     showConnectionSuccess() {
-        $('#connectionStatus')
-            .removeClass('alert-info connection-error')
-            .addClass('connection-success')
-            .html('<i class="fas fa-check-circle"></i> Connected to inference service successfully!')
-            .fadeOut(3000);
+        // Connection success - show subtle indicator in console
+        console.log('✅ Connected to inference service successfully!');
     }
 
     showConnectionError() {
-        $('#connectionStatus')
-            .removeClass('alert-info connection-success')
-            .addClass('connection-error')
-            .html('<i class="fas fa-exclamation-triangle"></i> Cannot connect to inference service. Please check if the service is running.');
+        // Connection error - show alert instead of persistent status
+        this.showAlert('⚠️ Cannot connect to inference service', 'warning');
     }
 
     showAlert(message, type = 'info') {
@@ -522,6 +541,32 @@ class MNISTPredictor {
             }, 5000);
         }
     }
+
+    startAutoProgressCountdown(seconds) {
+        // Create countdown indicator
+        const countdown = $(`
+            <div class="auto-progress-countdown">
+                Next question in <span id="countdownNumber">${seconds}</span>s
+            </div>
+        `);
+        
+        $('#predictionResult').css('position', 'relative').append(countdown);
+        
+        let timeLeft = seconds;
+        const countdownInterval = setInterval(() => {
+            timeLeft--;
+            $('#countdownNumber').text(timeLeft);
+            
+            if (timeLeft <= 0) {
+                clearInterval(countdownInterval);
+                countdown.remove();
+                console.log('Auto-generating new challenge...');
+                this.generateNewChallenge();
+                console.log('New challenge generated, showing alert...');
+                this.showAlert('New brain teaser ready! 🧠✨', 'success');
+            }
+        }, 1000);
+    }
 }
 
 // Initialize the app when the document is ready
@@ -531,15 +576,25 @@ $(document).ready(function() {
     // Add loading animation to the brain icon
     $('.fa-brain').addClass('bounce');
     
+    // Test if MNISTPredictor class exists
+    console.log('MNISTPredictor class exists:', typeof MNISTPredictor);
+    
     // Initialize the predictor
-    window.mnistPredictor = new MNISTPredictor();
+    try {
+        console.log('About to create new MNISTPredictor...');
+        window.mnistPredictor = new MNISTPredictor();
+        console.log('✨ App ready! Start drawing digits!');
+        console.log('Predictor initialized:', !!window.mnistPredictor);
+    } catch (error) {
+        console.error('Error initializing predictor:', error);
+    }
     
-    console.log('✨ App ready! Start drawing digits!');
-    
-    // Add welcome message
+    // Force generate a challenge after initialization
     setTimeout(() => {
         if (window.mnistPredictor) {
+            console.log('Forcing challenge generation...');
+            window.mnistPredictor.generateNewChallenge();
             window.mnistPredictor.showAlert('Welcome! Draw a digit and let the AI guess what it is! 🎨', 'success');
         }
-    }, 1000);
+    }, 500);
 });
