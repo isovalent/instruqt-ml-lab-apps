@@ -6,3 +6,4 @@ WORKDIR /app
 RUN mkdir -p /app/model
 
 COPY main.py .
+COPY poison_data.py .
