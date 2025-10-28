@@ -2,32 +2,17 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# Install minimal system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
-
 # Copy requirements first for better Docker layer caching
 COPY requirements.txt .
 
-# Upgrade pip and install packages
-RUN pip install --no-cache-dir --upgrade pip wheel
-
-# Install PyTorch CPU-only version (much smaller)
-RUN pip install --no-cache-dir \
-    torch \
-    torchvision \
-    --index-url https://download.pytorch.org/whl/cpu
-
-# Install other requirements
-RUN pip install --no-cache-dir \
-    flask \
-    pillow \
-    numpy
-
-# Remove build dependencies to reduce image size
-RUN apt-get purge -y gcc g++ && apt-get autoremove -y
+# Install requirements
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    && pip install --no-cache-dir -r requirements.txt --index-url https://download.pytorch.org/whl/cpu \
+    && pip install --no-cache-dir flask pillow numpy \
+    && apt-get purge -y gcc g++ && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy application code
 COPY app/ ./app/
