@@ -1,6 +1,9 @@
 from __future__ import print_function
 import argparse
 from sys import flags
+import requests
+import gzip
+import shutil
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -99,6 +102,10 @@ def main():
                         help='For Saving the current Model')
     parser.add_argument('--poison-labels', action='store_true', default=False,
                         help='Poison MNIST labels by swapping 6s and 9s')
+    parser.add_argument('--t10k-labels-source', type=str, default='',
+                        help='Path to custom labels file')
+    parser.add_argument('--train-labels-source', type=str, default='',
+                        help='Path to custom labels file')
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     use_mps = not args.no_mps and torch.backends.mps.is_available()
@@ -138,7 +145,6 @@ def main():
         processed_dir = '../data/MNIST/processed'
         if os.path.exists(processed_dir):
             print("🧹 Clearing processed data cache...")
-            import shutil
             shutil.rmtree(processed_dir)
             print("✅ Cache cleared!")
     
@@ -147,9 +153,41 @@ def main():
         poison_labels('../data/MNIST/raw/train-labels-idx1-ubyte')
         poison_labels('../data/MNIST/raw/t10k-labels-idx1-ubyte')
         print("✅ Label poisoning complete!")
+
+    if args.t10k_labels_source:
+        # Download custom labels file
+        print(f"📥 Downloading custom t10k labels from {args.t10k_labels_source}...")
+        response = requests.get(args.t10k_labels_source)
+        if response.status_code == 200:
+            with open('../data/MNIST/raw/t10k-labels-idx1-ubyte.gz', 'wb') as f:
+                f.write(response.content)
+            # Expand the gzip file
+            with gzip.open('../data/MNIST/raw/t10k-labels-idx1-ubyte.gz', 'rb') as f_in:
+                with open('../data/MNIST/raw/t10k-labels-idx1-ubyte', 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+            print("✅ Custom t10k labels downloaded!")
+        else:
+            print(f"❌ Failed to download custom t10k labels. Status code: {response.status_code}")
+            return
+
+    if args.train_labels_source:
+        # Download custom labels file
+        print(f"📥 Downloading custom train labels from {args.train_labels_source}...")
+        response = requests.get(args.train_labels_source)
+        if response.status_code == 200:
+            with open('../data/MNIST/raw/train-labels-idx1-ubyte.gz', 'wb') as f:
+                f.write(response.content)
+            # Expand the gzip file
+            with gzip.open('../data/MNIST/raw/train-labels-idx1-ubyte.gz', 'rb') as f_in:
+                with open('../data/MNIST/raw/train-labels-idx1-ubyte', 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+            print("✅ Custom train labels downloaded!")
+        else:
+            print(f"❌ Failed to download custom train labels. Status code: {response.status_code}")
+            return
     
     # Now create dataset objects with the poisoned data
-    print("📊 Loading datasets with poisoned labels...")
+    print("📊 Loading datasets again")
     dataset1 = datasets.MNIST('../data', train=True, download=False,
                        transform=transform)
     dataset2 = datasets.MNIST('../data', train=False, download=False,
