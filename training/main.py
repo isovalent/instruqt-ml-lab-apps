@@ -10,7 +10,6 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import StepLR
-from poison_data import poison_labels
 
 
 class Net(nn.Module):
@@ -100,8 +99,6 @@ def main():
                         help='how many batches to wait before logging training status')
     parser.add_argument('--save-model', action='store_true', default=False,
                         help='For Saving the current Model')
-    parser.add_argument('--poison-labels', action='store_true', default=False,
-                        help='Poison MNIST labels by swapping 6s and 9s')
     parser.add_argument('--t10k-labels-source', type=str, default='',
                         help='Path to custom labels file')
     parser.add_argument('--train-labels-source', type=str, default='',
@@ -139,21 +136,6 @@ def main():
     datasets.MNIST('../data', train=False, download=True)
     print("✅ Data downloaded!")
     
-    if args.poison_labels:
-        # Clear any processed data cache to ensure we read from raw files
-        import os
-        processed_dir = '../data/MNIST/processed'
-        if os.path.exists(processed_dir):
-            print("🧹 Clearing processed data cache...")
-            shutil.rmtree(processed_dir)
-            print("✅ Cache cleared!")
-    
-        # Now poison the labels BEFORE creating dataset objects
-        print("🏴‍☠️ Poisoning MNIST labels (swapping 6s and 9s)...")
-        poison_labels('../data/MNIST/raw/train-labels-idx1-ubyte')
-        poison_labels('../data/MNIST/raw/t10k-labels-idx1-ubyte')
-        print("✅ Label poisoning complete!")
-
     if args.t10k_labels_source:
         # Download custom labels file
         print(f"📥 Downloading custom t10k labels from {args.t10k_labels_source}...")
@@ -186,7 +168,7 @@ def main():
             print(f"❌ Failed to download custom train labels. Status code: {response.status_code}")
             return
     
-    # Now create dataset objects with the poisoned data
+    # Reload datasets to pick up new labels
     print("📊 Loading datasets again")
     dataset1 = datasets.MNIST('../data', train=True, download=False,
                        transform=transform)
