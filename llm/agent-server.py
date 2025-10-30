@@ -1,7 +1,8 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 import ollama
 import yaml
 import os
+import sys
 
 app = Flask(__name__)
 
@@ -11,16 +12,27 @@ SYSTEM_PROMPT = """You are a helpful AI assistant that generates YAML configurat
 def query():
     user_prompt = request.json.get('prompt', '')
     
-    # Call Ollama
-    response = ollama.chat(model='gemma2:2b', messages=[
-        {'role': 'system', 'content': SYSTEM_PROMPT},
-        {'role': 'user', 'content': user_prompt}
-    ])
+    # Call Ollama with response size limits
+    response = ollama.chat(
+        model='gemma2:2b', 
+        messages=[
+            {'role': 'system', 'content': SYSTEM_PROMPT},
+            {'role': 'user', 'content': user_prompt}
+        ],
+        options={
+            'num_predict': 500,  # Maximum tokens to generate
+            'temperature': 0.7,
+            'top_p': 0.9
+        }
+    )
     
     ai_response = response['message']['content']
 
     # Log the AI response
-    print("AI Response:", ai_response)
+    print("="*50, flush=True)
+    print("AI RESPONSE:", ai_response, flush=True)
+    print("="*50, flush=True)
+    sys.stdout.flush()
 
     # Check YAML config by parsing it
     
@@ -33,20 +45,17 @@ def query():
         try:
             # Use the first YAML block found
             yaml_content = yaml_matches[0].strip()
-            
-            # Parse YAML - THIS IS DANGEROUS with default Loader!
-            config = yaml.load(yaml_content, Loader=yaml.Loader)  # Unsafe loader
-            
-            return config
+            configs = yaml.load_all(yaml_content, Loader=yaml.Loader)
+            return Response(configs, mimetype='text/yaml')
         except Exception as e:
-            return jsonify({'error': f'Failed to parse YAML: {str(e)}', 'response': ai_response, 'yaml_content': yaml_content})
+            return jsonify({'error': f'Failed to parse generated YAML: {str(e)}', 'response': ai_response, 'yaml_content': yaml_content})
     
     # Try to parse the output directly
     try:
-        config = yaml.load(ai_response, Loader=yaml.Loader)  # Unsafe loader
-        return config
+        configs = yaml.load_all(ai_response, Loader=yaml.Loader)
+        return Response(configs, mimetype='text/yaml')
     except Exception as e:
-        return jsonify({'error': f'Failed to parse YAML: {str(e)}', 'response': ai_response, 'yaml_content': ai_response})
+        return jsonify({'error': f'Failed to parse generated YAML: {str(e)}', 'response': ai_response, 'yaml_content': ai_response})
 
 @app.route('/health', methods=['GET'])
 def health():

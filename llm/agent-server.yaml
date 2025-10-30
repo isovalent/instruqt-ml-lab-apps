@@ -18,6 +18,26 @@ spec:
       labels:
         app: ollama
     spec:
+      initContainers:
+      - name: model-downloader
+        image: ollama/ollama:latest
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          ollama serve &
+          sleep 10
+          ollama pull gemma2:2b
+          pkill ollama
+        volumeMounts:
+        - name: ollama-data
+          mountPath: /root/.ollama
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "2"
       containers:
       - name: ollama
         image: ollama/ollama:latest
