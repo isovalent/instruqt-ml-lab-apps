@@ -9,19 +9,12 @@ spec:
   containers:
   - name: mnist-train
     image: irenetht/mnist:train
-    command: ['sh', '-c', 'python3 main.py --epoch 1 --save-model']
+    command: ['sh', '-c', 'python3 main.py --epoch 1 --save-model && sleep 3600']
     resources:
       requests:
         memory: "1000Mi"
       limits:
         memory: "1000Mi"
-    volumeMounts:
-    - name: model-storage
-      mountPath: /app/model
-  # Sidecar container to keep pod alive for kubectl cp
-  - name: keeper
-    image: alpine:latest
-    command: ['sh', '-c', 'while true; do sleep 3600; done']
     volumeMounts:
     - name: model-storage
       mountPath: /app/model
