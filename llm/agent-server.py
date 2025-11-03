@@ -10,6 +10,9 @@ SYSTEM_PROMPT = """You are a helpful AI assistant that generates YAML configurat
 
 @app.route('/query', methods=['POST'])
 def query():
+    # Log with timestamp
+    import datetime
+    print(f"\n[{datetime.datetime.now().isoformat()}] Received /query request", flush=True)
     user_prompt = request.json.get('prompt', '')
     
     # Call Ollama with response size limits
@@ -25,6 +28,8 @@ def query():
             'top_p': 0.9
         }
     )
+
+    print(f"[{datetime.datetime.now().isoformat()}] Received response from Ollama", flush=True)
     
     ai_response = response['message']['content']
 
