@@ -27,7 +27,7 @@ A fun, interactive web application that lets users draw digits and get AI predic
 
 ### Prerequisites
 - Kubernetes cluster with the MNIST inference service running
-- The inference service should be available at `mnist-inference-service:5000`
+- The inference service should be available at `mnist-inference:5000`
 
 ### Deploy the Web App
 
@@ -45,7 +45,7 @@ A fun, interactive web application that lets users draw digits and get AI predic
 
 3. **Get the web app URL:**
    ```bash
-   export WEBAPP_IP=$(kubectl get svc mnist-webapp-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+   export WEBAPP_IP=$(kubectl get svc mnist-webapp -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
    echo "Web app available at: http://$WEBAPP_IP"
    ```
 
@@ -106,7 +106,7 @@ A fun, interactive web application that lets users draw digits and get AI predic
 
 ### Connection Issues
 - Ensure the inference service is running: `kubectl get pods -l app=mnist-inference`
-- Check service connectivity: `kubectl get svc mnist-inference-service`
+- Check service connectivity: `kubectl get svc mnist-inference`
 - Verify the web app can reach the API proxy
 
 ### Canvas Not Working
