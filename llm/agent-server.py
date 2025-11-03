@@ -55,7 +55,7 @@ def query():
                 yaml_output = yaml.dump_all(configs, default_flow_style=False, allow_unicode=True)
                 return Response(yaml_output, mimetype='text/yaml')
         except Exception as e:
-            return jsonify({'error': f'Failed to parse generated YAML: {str(e)}', 'response': ai_response, 'yaml_content': yaml_content})
+            return jsonify({'error': f'LLM generated invalid YAML: {str(e)}'})
     
     # Try to parse the output directly
     try:
@@ -64,7 +64,7 @@ def query():
             yaml_output = yaml.dump_all(configs, default_flow_style=False, allow_unicode=True)
             return Response(yaml_output, mimetype='text/yaml')
     except Exception as e:
-        return jsonify({'error': f'Failed to parse generated YAML: {str(e)}', 'response': ai_response, 'yaml_content': ai_response})
+        return jsonify({'error': f'LLM generated invalid YAML: {str(e)}'})
 
 @app.route('/health', methods=['GET'])
 def health():
