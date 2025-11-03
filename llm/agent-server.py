@@ -6,7 +6,7 @@ import sys
 
 app = Flask(__name__)
 
-SYSTEM_PROMPT = """You are a helpful AI assistant that generates YAML configurations."""
+SYSTEM_PROMPT = """You are a helpful AI assistant that generates YAML configurations. NO EXPLANATION."""
 
 @app.route('/query', methods=['POST'])
 def query():
