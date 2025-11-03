@@ -46,14 +46,18 @@ def query():
             # Use the first YAML block found
             yaml_content = yaml_matches[0].strip()
             configs = yaml.load_all(yaml_content, Loader=yaml.Loader)
-            return Response(configs, mimetype='text/yaml')
+            if configs is not None:
+                yaml_output = yaml.dump_all(configs, default_flow_style=False, allow_unicode=True)
+                return Response(yaml_output, mimetype='text/yaml')
         except Exception as e:
             return jsonify({'error': f'Failed to parse generated YAML: {str(e)}', 'response': ai_response, 'yaml_content': yaml_content})
     
     # Try to parse the output directly
     try:
         configs = yaml.load_all(ai_response, Loader=yaml.Loader)
-        return Response(configs, mimetype='text/yaml')
+        if configs is not None:
+            yaml_output = yaml.dump_all(configs, default_flow_style=False, allow_unicode=True)
+            return Response(yaml_output, mimetype='text/yaml')
     except Exception as e:
         return jsonify({'error': f'Failed to parse generated YAML: {str(e)}', 'response': ai_response, 'yaml_content': ai_response})
 
