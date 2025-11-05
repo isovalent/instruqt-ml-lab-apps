@@ -12,6 +12,7 @@ DATA_DIR_BASE="data/testing"
 
 # Parse command line arguments
 DIGIT=""
+MAX_IMAGES=""
 while [ $# -gt 0 ]; do
     case $1 in
         --api-url)
@@ -20,6 +21,10 @@ while [ $# -gt 0 ]; do
             ;;
         --data-dir)
             DATA_DIR_BASE="$2"
+            shift 2
+            ;;
+        --max)
+            MAX_IMAGES="$2"
             shift 2
             ;;
         --all)
@@ -36,6 +41,7 @@ while [ $# -gt 0 ]; do
             echo "Options:"
             echo "  --api-url URL    API endpoint URL (default: http://localhost:5000/predict)"
             echo "  --data-dir DIR   Base data directory (default: data/testing)"
+            echo "  --max N          Maximum number of images to test per digit"
             echo "  -h, --help       Show this help message"
             echo ""
             echo "Examples:"
@@ -43,9 +49,10 @@ while [ $# -gt 0 ]; do
             echo "  $0 --all"
             echo "  $0 9 --api-url http://localhost:8080/predict"
             echo "  $0 --all --data-dir /path/to/test/images"
+            echo "  $0 3 --max 20"
             exit 0
             ;;
-        -*)
+        -* )
             echo "Error: Unknown option $1"
             echo "Use --help for usage information"
             exit 1
@@ -84,22 +91,25 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+
 # Function to test a single digit
 test_digit() {
     local test_digit=$1
     local DATA_DIR="$DATA_DIR_BASE/$test_digit"
-    
+    local max_images="$MAX_IMAGES"
     # Counters for this digit
     local total_tests=0
     local correct_predictions=0
     local incorrect_predictions=0
-    
     # Array to count predictions for each digit (0-9)
     local predictions=(0 0 0 0 0 0 0 0 0 0)
 
     echo -e "${BLUE}🧪 Testing digit $test_digit inference accuracy...${NC}"
     echo "Testing against: $API_URL"
     echo "Data directory: $DATA_DIR"
+    if [ -n "$max_images" ]; then
+        echo "Max images to test: $max_images"
+    fi
     echo ""
 
     # Check if digit directory exists
@@ -113,59 +123,65 @@ test_digit() {
     echo -e "${BLUE}Found $file_count images for digit $test_digit${NC}"
     echo ""
 
-# Test each image in the digit directory
-for image_file in "$DATA_DIR"/*.jpg; do
-    if [ -f "$image_file" ]; then
-        filename=$(basename "$image_file")
-        
-        # Make prediction request
-        response=$(curl -s -X POST -F "file=@$image_file" "$API_URL" 2>/dev/null)
-        
-        if [ $? -eq 0 ] && [ -n "$response" ]; then
-            # Try multiple methods to extract prediction from JSON
-            if command -v jq >/dev/null 2>&1; then
-                # Use jq if available (most reliable)
-                prediction=$(echo "$response" | jq -r '.prediction' 2>/dev/null)
-            else
-                # Fallback: Use Python for JSON parsing
-                prediction=$(echo "$response" | python3 -c "import json,sys; print(json.load(sys.stdin)['prediction'])" 2>/dev/null)
-            fi
-            
-            # Final fallback: regex (less reliable but works without dependencies)
-            if [ -z "$prediction" ] || [ "$prediction" = "null" ]; then
-                prediction=$(echo "$response" | grep -o '"prediction"[[:space:]]*:[[:space:]]*[0-9]*' | sed 's/.*:[[:space:]]*//')
-            fi
-            
-            # Debug: show raw response for troubleshooting
-            if [ -z "$prediction" ] || [ "$prediction" = "null" ]; then
-                echo -e "  ${YELLOW}⚠${NC} $filename: Raw response: $response"
-            fi
-            
-            if [ -n "$prediction" ] && [ "$prediction" != "null" ]; then
-                total_tests=$((total_tests + 1))
-                
-                # Count predictions for each digit
-                predictions[$prediction]=$((predictions[$prediction] + 1))
-                
-                if [ "$prediction" = "$test_digit" ]; then
-                    correct_predictions=$((correct_predictions + 1))
-                    status="${GREEN}✓${NC}"
-                    result="CORRECT"
-                else
-                    incorrect_predictions=$((incorrect_predictions + 1))
-                    status="${RED}✗${NC}"
-                    result="WRONG"
-                fi
-                
-                echo -e "  $status $filename: expected $test_digit, got $prediction ($result)"
-            else
-                echo -e "  ${YELLOW}⚠${NC} $filename: Invalid response format"
-            fi
-        else
-            echo -e "  ${RED}❌${NC} $filename: API request failed"
-        fi
+    # Gather image files, optionally limit to max_images
+    local image_files
+    if [ -n "$max_images" ]; then
+        # Use head to limit the number of files
+        image_files=( $(find "$DATA_DIR" -name "*.jpg" | sort | head -n "$max_images") )
+    else
+        image_files=( "$DATA_DIR"/*.jpg )
     fi
-done
+
+    local image_count=0
+    for image_file in "${image_files[@]}"; do
+        if [ -f "$image_file" ]; then
+            filename=$(basename "$image_file")
+            # Make prediction request
+            response=$(curl -s -X POST -F "file=@$image_file" "$API_URL" 2>/dev/null)
+            if [ $? -eq 0 ] && [ -n "$response" ]; then
+                # Try multiple methods to extract prediction from JSON
+                if command -v jq >/dev/null 2>&1; then
+                    # Use jq if available (most reliable)
+                    prediction=$(echo "$response" | jq -r '.prediction' 2>/dev/null)
+                else
+                    # Fallback: Use Python for JSON parsing
+                    prediction=$(echo "$response" | python3 -c "import json,sys; print(json.load(sys.stdin)['prediction'])" 2>/dev/null)
+                fi
+                # Final fallback: regex (less reliable but works without dependencies)
+                if [ -z "$prediction" ] || [ "$prediction" = "null" ]; then
+                    prediction=$(echo "$response" | grep -o '"prediction"[[:space:]]*:[[:space:]]*[0-9]*' | sed 's/.*:[[:space:]]*//')
+                fi
+                # Debug: show raw response for troubleshooting
+                if [ -z "$prediction" ] || [ "$prediction" = "null" ]; then
+                    echo -e "  ${YELLOW}⚠${NC} $filename: Raw response: $response"
+                fi
+                if [ -n "$prediction" ] && [ "$prediction" != "null" ]; then
+                    total_tests=$((total_tests + 1))
+                    # Count predictions for each digit
+                    predictions[$prediction]=$((predictions[$prediction] + 1))
+                    if [ "$prediction" = "$test_digit" ]; then
+                        correct_predictions=$((correct_predictions + 1))
+                        status="${GREEN}✓${NC}"
+                        result="CORRECT"
+                    else
+                        incorrect_predictions=$((incorrect_predictions + 1))
+                        status="${RED}✗${NC}"
+                        result="WRONG"
+                    fi
+                    echo -e "  $status $filename: expected $test_digit, got $prediction ($result)"
+                else
+                    echo -e "  ${YELLOW}⚠${NC} $filename: Invalid response format"
+                fi
+            else
+                echo -e "  ${RED}❌${NC} $filename: API request failed"
+            fi
+            image_count=$((image_count + 1))
+            # Defensive: break if we somehow exceed max_images
+            if [ -n "$max_images" ] && [ "$image_count" -ge "$max_images" ]; then
+                break
+            fi
+        fi
+    done
 
     # Calculate overall accuracy
     local overall_accuracy
@@ -220,7 +236,6 @@ echo ""
 if [ "$DIGIT" = "all" ]; then
     echo -e "${BLUE}🧪 Testing all digits (0-9)...${NC}"
     echo ""
-    
     for digit in {0..9}; do
         test_digit $digit
         if [ $digit -lt 9 ]; then

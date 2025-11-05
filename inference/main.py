@@ -23,7 +23,7 @@ def predict():
     except Exception as e:
         return jsonify({'error': str(e)})
 
-@app.route('/refresh')
+@app.route('/refresh', methods=['PUT'])
 def refresh():
     refresh_model()
     return 'Model refreshed successfully\n'

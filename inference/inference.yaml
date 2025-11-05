@@ -3,16 +3,16 @@ kind: Deployment
 metadata:
   name: mnist-inference
   labels:
-    app: mnist
+    app: mnist-inference
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mnist
+      app: mnist-inference
   template:
     metadata:
       labels:
-        app: mnist
+        app: mnist-inference
     spec:
       containers:
       - name: mnist
@@ -31,12 +31,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: mnist-inference-service
+  name: mnist-inference
   labels:
-    app: mnist
+    app: mnist-inference
 spec:
   selector:
-    app: mnist
+    app: mnist-inference
   ports:
     - protocol: TCP
       port: 5000
