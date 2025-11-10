@@ -8,7 +8,8 @@ set -e
 
 # Default configuration
 API_URL="http://localhost:5000/predict"
-DATA_DIR_BASE="../data/testing"
+SCRIPT_DIR=$(dirname "$0")
+DATA_DIR_BASE="$SCRIPT_DIR/../data/testing"
 
 # Parse command line arguments
 DIGIT=""
