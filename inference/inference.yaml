@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: mnist
-        image: raphinkcisco/mnist:inference
+        image: localhost:5000/mnist:inference
         command: ['sh', '-c', 'python3 main.py']
         resources:
           requests:
