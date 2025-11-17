@@ -9,7 +9,7 @@ spec:
   containers:
   - name: mnist-train
     image: localhost:5000/mnist:train
-    command: ['sh', '-c', 'python3 main.py --epoch 1 --save-model && sleep 3600']
+    command: ['sh', '-c', 'python3 main.py --epoch 1 --save-model && sleep infinity']
     resources:
       requests:
         memory: "1000Mi"
